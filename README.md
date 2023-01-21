@@ -5,6 +5,7 @@ The plugin can parse and process yaml files and store them in an output file wit
 Releases are published to [Maven Central](https://search.maven.org/search?q=io.github.menostos).
 
 ## Maven pom.xml Configuration
+also see the [maven plugin documentation](https://menostos.github.io/yaml-merge-maven-plugin/plugin-info.html)
 
 ### process a single file
 If you just want to process a single file, you can specify an input and an output file path.
