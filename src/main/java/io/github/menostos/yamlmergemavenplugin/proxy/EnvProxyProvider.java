@@ -1,5 +1,7 @@
 package io.github.menostos.yamlmergemavenplugin.proxy;
 
+import org.apache.maven.plugin.logging.Log;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.AbstractMap;
@@ -22,25 +24,25 @@ public class EnvProxyProvider extends ValueBasedConfigurationProxyProvider {
         );
     }
 
-    public static EnvProxyProvider http() {
-        return create("http_proxy", false);
+    public static EnvProxyProvider http(Log log) {
+        return create("http_proxy", false, log);
     }
 
-    public static EnvProxyProvider https() {
-        return create("https_proxy", true);
+    public static EnvProxyProvider https(Log log) {
+        return create("https_proxy", true, log);
     }
 
-    private static EnvProxyProvider create(String key, boolean onlyHttps) {
+    private static EnvProxyProvider create(String key, boolean onlyHttps, Log log) {
         Optional<Map.Entry<String, Integer>> proxyUrl = getEnvValueOrUpperCase(key)
                 .map(s -> {
                     try {
                         return new URL(s);
                     } catch (MalformedURLException e) {
-                        throw new RuntimeException(e);
+                        log.warn("could not parse proxy url " + s);
+                        return null;
                     }
                 })
                 .map(url -> new AbstractMap.SimpleEntry<>(url.getHost(), url.getPort()));
-
         return new EnvProxyProvider(
                 proxyUrl.map(Map.Entry::getKey),
                 proxyUrl.map(Map.Entry::getValue).map(String::valueOf),

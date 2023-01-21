@@ -12,7 +12,7 @@ public class MavenSettingsProxyProvider extends ValueBasedConfigurationProxyProv
                 Optional.ofNullable(settings.getActiveProxy()).map(Proxy::getHost),
                 Optional.ofNullable(settings.getActiveProxy()).map(Proxy::getPort),
                 parseArray(Optional.ofNullable(settings.getActiveProxy()).map(Proxy::getNonProxyHosts), "\\|"),
-                false
+                Optional.ofNullable(settings.getActiveProxy()).map(Proxy::getProtocol).map("https"::equals).orElse(false)
         );
     }
 

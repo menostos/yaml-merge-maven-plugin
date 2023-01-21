@@ -2,10 +2,20 @@
 <project xmlns="http://maven.apache.org/DECORATION/1.8.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/DECORATION/1.8.0 https://maven.apache.org/xsd/decoration-1.8.0.xsd">
 
+    <bannerLeft>
+        <name>YAML Merge Maven Plugin</name>
+    </bannerLeft>
+    <publishDate/>
+    <version/>
     <body>
+        <menu>
+            <item name="Home" href="./index.html"/>
+        </menu>
         <menu ref="reports"/>
+        <menu>
+            <item name="Github" href="https://github.com/menostos/yaml-merge-maven-plugin" target="_blank"/>
+        </menu>
     </body>
-
     <skin>
         <groupId>org.apache.maven.skins</groupId>
         <artifactId>maven-fluido-skin</artifactId>

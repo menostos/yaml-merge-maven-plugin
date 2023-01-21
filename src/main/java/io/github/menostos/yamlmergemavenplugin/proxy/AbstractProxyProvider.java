@@ -23,7 +23,12 @@ public abstract class AbstractProxyProvider implements ProxyProvider {
             return Arrays.stream(getNonProxyHosts())
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
-                    .noneMatch(noProxy -> url.getHost().contains(noProxy));
+                    .noneMatch(noProxy -> {
+                        if (noProxy.startsWith("*")) {
+                            return url.getHost().endsWith(noProxy.substring(1));
+                        }
+                        return url.getHost().equals(noProxy);
+                    });
         }
         return true;
     }

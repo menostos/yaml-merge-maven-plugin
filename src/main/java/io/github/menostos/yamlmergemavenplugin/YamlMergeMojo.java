@@ -26,26 +26,59 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * this goal will take an input yaml and process any yaml merge keys effectively copying the contents to the destination
+ */
 @Mojo(name = "resolve", defaultPhase = LifecyclePhase.PROCESS_RESOURCES)
 public class YamlMergeMojo extends AbstractMojo {
 
+    /**
+     * an input parameter, the value can be a file path, a directory, a path or an url
+     *
+     * @since 0.0.1
+     */
     @Parameter(name = "input", defaultValue = "${project.basedir}", required = true)
     String input;
 
+    /**
+     * the target location, where the processed files will be stored
+     *
+     * @since 0.0.1
+     */
     @Parameter(name = "output", defaultValue = "${project.build.directory}", required = true)
     private File output;
 
+    /**
+     * any key starting with this value will not be present in the final yaml file.
+     * this can be used to not include template objects as further parser may not support them.
+     *
+     * @since 0.0.1
+     */
+    @Parameter(name = "keyIgnorePrefix", defaultValue = ".")
+    private String keyIgnorePrefix = ".";
+
+    /**
+     * if the plugin execution should be skipped
+     *
+     * @since 0.0.1
+     */
     @Parameter(name = "skip", defaultValue = "false")
     private Boolean skip;
 
-    @Parameter(name = "proxyHost")
-    private String proxyHost;
-
-    @Parameter(name = "proxyPort")
-    private Integer proxyPort;
-
-    @Parameter(name = "noProxyHosts")
-    private String noProxyHosts;
+    /**
+     * an optional proxy which will be used to fetch the yaml from an url
+     * <pre>{@code
+     *  <proxy>
+     *      <host>some-proxy</host>
+     *      <port>8080</port>
+     *      <noProxyHosts>noProxy1,noProxy2</noProxyHosts>
+     *  </proxy>
+     * }</pre>
+     *
+     * @since 0.0.1
+     */
+    @Parameter(name = "proxy")
+    private ProxyConfiguration proxy;
 
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     MavenProject project;
@@ -125,21 +158,26 @@ public class YamlMergeMojo extends AbstractMojo {
     }
 
     private void processUrl(URL url, Path out) throws IOException, MojoExecutionException, MojoFailureException {
-        Optional<Proxy> proxy = Arrays.stream(new ProxyProvider[]{
-                        new PluginConfigurationProxyProvider(proxyHost, proxyPort, noProxyHosts),
+        Optional<Proxy> httpProxy = Arrays.stream(new ProxyProvider[]{
+                        proxy != null ? new PluginConfigurationProxyProvider(
+                                proxy.getHost(), proxy.getPort(), proxy.getNoProxyHosts()
+                        ) : null,
                         new MavenSettingsProxyProvider(settings),
                         SystemPropertiesProxyProvider.https(),
                         SystemPropertiesProxyProvider.http(),
-                        EnvProxyProvider.https(),
-                        EnvProxyProvider.http()
+                        EnvProxyProvider.https(getLog()),
+                        EnvProxyProvider.http(getLog())
                 })
+                .filter(Objects::nonNull)
                 .filter(proxyProvider -> proxyProvider.doesApply(url))
                 .map(ProxyProvider::getProxy)
                 .findFirst();
 
+        getLog().info("processing yaml file url " + url);
         HttpURLConnection urlConnection;
-        if (proxy.isPresent()) {
-            urlConnection = (HttpURLConnection) url.openConnection(proxy.get());
+        if (httpProxy.isPresent()) {
+            getLog().info("Using proxy for connection " + httpProxy.get().address().toString());
+            urlConnection = (HttpURLConnection) url.openConnection(httpProxy.get());
         } else {
             urlConnection = (HttpURLConnection) url.openConnection();
         }
@@ -184,15 +222,22 @@ public class YamlMergeMojo extends AbstractMojo {
     private Object resolveRecursively(Object object) {
         if (object instanceof Map) {
             Map<Object, Object> map = new LinkedHashMap<>();
-            Map<?, ?> mappingNode = (Map<?, ?>) object;
-            mappingNode.forEach((key, value) -> map.put(
-                    resolveRecursively(key),
-                    resolveRecursively(value)
-            ));
+            Map<Object, Object> mappingNode = (Map<Object, Object>) object;
+            mappingNode.entrySet().stream()
+                    .filter(entry -> {
+                        if (entry.getKey() instanceof String) {
+                            return !((String) entry.getKey()).startsWith(keyIgnorePrefix);
+                        }
+                        return true;
+                    })
+                    .forEach(entry -> map.put(
+                            resolveRecursively(entry.getKey()),
+                            resolveRecursively(entry.getValue())
+                    ));
             return map;
         } else if (object instanceof List) {
             List<Object> list = new ArrayList<>();
-            List<?> mappingList = (List<?>) object;
+            List<Object> mappingList = (List<Object>) object;
             mappingList.forEach(child ->
                     list.add(resolveRecursively(child))
             );
@@ -211,7 +256,7 @@ public class YamlMergeMojo extends AbstractMojo {
                 .map(s -> {
                     int lastSlash = url.getPath().lastIndexOf("/");
                     if (lastSlash > -1) {
-                        return s.substring(lastSlash).trim();
+                        return s.substring(lastSlash + 1).trim();
                     }
                     return null;
                 })

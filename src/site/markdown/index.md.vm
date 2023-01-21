@@ -1,0 +1,68 @@
+#set ( $d = "$")
+#set ( $h = "#")
+# ${project.name}
+
+This Plugin is intended for systems/plugins that cannot handle <a href="https://yaml.org/type/merge.html" target="_blank">YAML merge keys</a> itself.
+The plugin can parse and process yaml files and store them in an output file with the merge keys resolve.
+
+${h}${h} Usage
+
+**pom.xml**
+```xml
+<plugin>
+    <groupId>${project.groupId}</groupId>
+    <artifactId>${project.artifactId}</artifactId>
+    <version>${project.version}</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>resolve</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <!-- the input file which will be processed -->
+        <input>${d}{project.basedir}/src/main/resources/input.yaml</input>
+        <!-- an output file or directory which is used for output -->
+        <output>${d}{project.build.directory}/output.yaml</output>
+        <!-- any object key which starts with this prefix will not be present in the final yaml (defaults to ".") -->
+        <keyIgnorePrefix>.</keyIgnorePrefix>
+    </configuration>
+</plugin>
+```
+
+**input.yaml**
+```yaml
+.errors: &errorResponses
+  401: unauthorized
+  403: forbidden
+  404: notfound
+  500: error
+apis:
+  firstApi:
+    200: ok
+    <<: *errorResponses
+  secondApi:
+    200: somewhat ok
+    <<: *errorResponses
+```
+
+**output.yaml**
+```yaml
+apis:
+  firstApi:
+    200: ok
+    401: unauthorized
+    403: forbidden
+    404: notfound
+    500: error
+  secondApi:
+    200: somewhat ok
+    401: unauthorized
+    403: forbidden
+    404: notfound
+    500: error
+```
+
+${h}${h} Maven Documentation
+[Read more about the Maven Configuration here](plugin-info.html)
