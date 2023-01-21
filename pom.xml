@@ -190,9 +190,9 @@
 	</developers>
 
 	<scm>
-		<connection>scm:git:git://github.com/menostos/yaml-merge-maven-plugin.git</connection>
-		<developerConnection>scm:git:ssh://github.com/menostos/yaml-merge-maven-plugin.git</developerConnection>
 		<url>https://github.com/menostos/yaml-merge-maven-plugin/tree/main</url>
+		<connection>scm:git:git://github.com/menostos/yaml-merge-maven-plugin.git</connection>
+		<developerConnection>scm:git:git@github.com:menostos/yaml-merge-maven-plugin.git</developerConnection>
 	</scm>
 
 	<distributionManagement>
