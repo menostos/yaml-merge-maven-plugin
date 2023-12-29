@@ -4,7 +4,7 @@
 
 	<groupId>io.github.menostos</groupId>
 	<artifactId>yaml-merge-maven-plugin</artifactId>
-	<version>1.1.0</version>
+	<version>1.1.1-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>YAML Merge Maven Plugin</name>
@@ -192,7 +192,7 @@
 		<url>https://github.com/menostos/yaml-merge-maven-plugin/tree/main</url>
 		<connection>scm:git:git://github.com/menostos/yaml-merge-maven-plugin.git</connection>
 		<developerConnection>scm:git:git@github.com:menostos/yaml-merge-maven-plugin.git</developerConnection>
-	  <tag>yaml-merge-maven-plugin-1.1.0</tag>
+	  <tag>HEAD</tag>
   </scm>
 
 	<distributionManagement>
